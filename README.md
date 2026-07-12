@@ -77,51 +77,7 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 | **Language** | TypeScript (97.6%) |
 
 ---
-
-## 📁 Project Structure
-
-```
-ecosphere/
-├── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── [...nextauth]/    # NextAuth handler
-│   │   │   ├── session/          # Session + full user data
-│   │   │   └── signup/           # User registration
-│   │   ├── badges/               # Badge catalog
-│   │   ├── carbon-transactions/  # Emission logging + auto-calc
-│   │   ├── challenges/
-│   │   │   ├── route.ts          # Challenge listing
-│   │   │   └── submit/           # Submit + badge auto-award
-│   │   ├── departments/
-│   │   │   ├── route.ts          # Department listing
-│   │   │   └── scores/           # ESG scores + compliance flags
-│   │   ├── emissions/            # Aggregated emission data
-│   │   ├── rewards/
-│   │   │   ├── route.ts          # Reward catalog
-│   │   │   └── redeem/           # Atomic point redemption
-│   │   └── users/                # User data
-│   ├── gamification/             # Employee gamification hub
-│   ├── dashboard/                # Executive analytics dashboard
-│   ├── login/                    # Login page
-│   ├── signup/                   # Registration page
-│   ├── globals.css               # Dual-theme CSS variables
-│   └── layout.tsx                # Root layout with providers
-├── components/
-│   ├── ui/                       # Reusable UI primitives
-│   ├── Providers.tsx             # Theme + Auth providers
-│   └── ThemeToggle.tsx           # Light/dark toggle
-├── lib/
-│   ├── auth.ts                   # NextAuth config
-│   ├── prisma.ts                 # Prisma client singleton
-│   ├── theme-provider.tsx        # Theme context
-│   └── utils.ts                  # Utility functions
-├── prisma/
-│   ├── schema.prisma             # Database schema (11 models)
-│   └── seed.ts                   # Sample data seeder
-└── middleware.ts                  # Route protection
-```
-
+        
 ---
 
 ## 🗄 Database Schema
