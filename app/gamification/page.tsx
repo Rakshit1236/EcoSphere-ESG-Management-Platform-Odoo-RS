@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Leaf, Trophy, Zap, Star, Award, Target, Gift, Lock, CheckCircle2,
-  ArrowRight, BarChart3, Sparkles, Clock, Upload, LogOut,
+  ArrowRight, BarChart3, Sparkles, Clock, Upload, LogOut, ImagePlus, X,
 } from "lucide-react";
 
 interface UserData {
@@ -44,7 +44,9 @@ export default function GamificationHub() {
   const [rewards, setRewards] = useState<RewardData[]>([]);
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [sel, setSel] = useState<ChallengeData | null>(null);
-  const [proofUrl, setProofUrl] = useState("");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
 
@@ -62,19 +64,41 @@ export default function GamificationHub() {
     fetch("/api/badges").then(r => r.json()).then(d => setBadges(d.badges));
   }, [router, fetchUser]);
 
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProofFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function removeFile() {
+    setProofFile(null);
+    setPreviewUrl("");
+  }
+
   async function handleSubmit() {
-    if (!sel || !user) return;
+    if (!sel || !user || !proofFile) return;
     setSubmitting(true);
+
+    const formData = new FormData();
+    formData.append("file", proofFile);
+    const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+    const uploadData = await uploadRes.json();
+    if (!uploadData.success) {
+      setSubmitting(false);
+      return;
+    }
+
     const res = await fetch("/api/challenges/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ challengeId: sel.id, userId: user.id, proofUrl }),
+      body: JSON.stringify({ challengeId: sel.id, userId: user.id, proofUrl: uploadData.url }),
     });
     const data = await res.json();
     if (data.success) {
       fetchUser(user.id);
       fetch("/api/challenges").then(r => r.json()).then(d => setChallenges(d.challenges));
-      setSel(null); setProofUrl("");
+      setSel(null); setProofFile(null); setPreviewUrl("");
     }
     setSubmitting(false);
   }
@@ -257,7 +281,7 @@ export default function GamificationHub() {
       </main>
 
       {/* Submission Modal */}
-      <Dialog open={!!sel} onOpenChange={o => { if (!o) { setSel(null); setProofUrl(""); } }}>
+      <Dialog open={!!sel} onOpenChange={o => { if (!o) { setSel(null); setProofFile(null); setPreviewUrl(""); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Target className="w-5 h-5 text-emerald-500" />{sel?.title}</DialogTitle>
@@ -265,17 +289,42 @@ export default function GamificationHub() {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-[var(--text-secondary)]">{sel?.description}</p>
+
+            {/* File Upload Zone */}
             <div>
-              <label className="text-sm font-medium text-[var(--text-secondary)] block mb-1.5">Proof URL</label>
-              <input type="url" value={proofUrl} onChange={e => setProofUrl(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                placeholder="https://example.com/proof.jpg" />
+              <label className="text-sm font-medium text-[var(--text-secondary)] block mb-1.5">Upload Proof Image</label>
+              {previewUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-[var(--border-color)]">
+                  <img src={previewUrl} alt="Proof preview" className="w-full h-48 object-cover" />
+                  <button
+                    onClick={removeFile}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                    <p className="text-white text-xs truncate">{proofFile?.name}</p>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-input)] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all cursor-pointer group">
+                  <ImagePlus className="w-10 h-10 text-[var(--text-muted)] group-hover:text-emerald-500 transition-colors mb-2" />
+                  <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]">Click to upload an image</span>
+                  <span className="text-xs text-[var(--text-muted)] mt-1">JPG, PNG, GIF, WebP &middot; Max 10MB</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setSel(null); setProofUrl(""); }}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={!proofUrl || submitting} className="gap-2">
-              {submitting ? "Submitting..." : "Submit"}{!submitting && <ArrowRight className="w-4 h-4" />}
+            <Button variant="outline" onClick={() => { setSel(null); setProofFile(null); setPreviewUrl(""); }}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={!proofFile || submitting} className="gap-2">
+              {submitting ? "Uploading..." : "Submit"}{!submitting && <ArrowRight className="w-4 h-4" />}
             </Button>
           </DialogFooter>
         </DialogContent>
