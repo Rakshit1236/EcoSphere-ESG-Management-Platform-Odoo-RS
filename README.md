@@ -85,52 +85,6 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 
 ---
 
-## 📁 Project Structure
-
-```
-ecosphere/
-├── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── [...nextauth]/    # NextAuth handler
-│   │   │   ├── session/          # Session + full user data
-│   │   │   └── signup/           # User registration
-│   │   ├── badges/               # Badge catalog
-│   │   ├── carbon-transactions/  # Emission logging + auto-calc
-│   │   ├── challenges/
-│   │   │   ├── route.ts          # Challenge listing
-│   │   │   └── submit/           # Submit + badge auto-award
-│   │   ├── departments/
-│   │   │   ├── route.ts          # Department listing
-│   │   │   └── scores/           # ESG scores + compliance flags
-│   │   ├── emissions/            # Aggregated emission data
-│   │   ├── rewards/
-│   │   │   ├── route.ts          # Reward catalog
-│   │   │   └── redeem/           # Atomic point redemption
-│   │   ├── upload/               # Image file upload
-│   │   └── users/                # User data
-│   ├── gamification/             # Employee gamification hub
-│   ├── dashboard/                # Executive analytics dashboard
-│   ├── login/                    # Login page
-│   ├── signup/                   # Registration page
-│   ├── globals.css               # Dual-theme CSS variables
-│   └── layout.tsx                # Root layout with providers
-├── components/
-│   ├── ui/                       # Reusable UI primitives
-│   ├── Providers.tsx             # Theme + Auth providers
-│   └── ThemeToggle.tsx           # Light/dark toggle
-├── lib/
-│   ├── auth.ts                   # NextAuth config
-│   ├── prisma.ts                 # Prisma client singleton
-│   ├── theme-provider.tsx        # Theme context
-│   └── utils.ts                  # Utility functions
-├── prisma/
-│   ├── schema.prisma             # Database schema (11 models)
-│   └── seed.ts                   # Sample data seeder
-├── public/uploads/               # Uploaded proof images
-└── middleware.ts                  # Route protection
-```
-
 ---
 
 ## 🗄 Database Schema
@@ -269,17 +223,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### Demo Credentials
-
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@ecosphere.com` | `password123` | Admin |
-| `alex@ecosphere.com` | `password123` | Employee |
-| `priya@ecosphere.com` | `password123` | Manager |
-| `marcus@ecosphere.com` | `password123` | Employee |
-| `elena@ecosphere.com` | `password123` | Employee |
-
----
 
 ## 🌐 Deployment
 
@@ -304,7 +247,7 @@ vercel --prod
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host/db?sslmode=require` |
 | `AUTH_SECRET` | NextAuth secret key | Random 32+ character string |
-| `NEXTAUTH_URL` | App base URL | `https://your-app.vercel.app` |
+| `NEXTAUTH_URL` | App base URL | `[https://your-app.vercel.app](https://ecosphere-esg-ten.vercel.app/login)` |
 
 ---
 
