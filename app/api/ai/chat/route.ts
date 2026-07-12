@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AI_API_KEY = process.env.AI_API_KEY;
-const AI_API_URL = process.env.AI_API_URL || "https://api.openai.com/v1/chat/completions";
-const AI_MODEL = process.env.AI_MODEL || "gpt-4o-mini";
-
 const SYSTEM_PROMPT = `You are EcoSphere AI, an ESG (Environmental, Social, Governance) analytics assistant.
 You help sustainability professionals understand their ESG data, carbon emissions, compliance requirements, and reporting frameworks.
 Answer concisely and use data when possible. Available context:
@@ -17,6 +13,10 @@ export async function POST(req: NextRequest) {
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Messages array is required" }, { status: 400 });
     }
+
+    const AI_API_KEY = process.env.AI_API_KEY;
+    const AI_API_URL = process.env.AI_API_URL || "https://api.openai.com/v1/chat/completions";
+    const AI_MODEL = process.env.AI_MODEL || "gpt-4o-mini";
 
     if (!AI_API_KEY) {
       return NextResponse.json({
