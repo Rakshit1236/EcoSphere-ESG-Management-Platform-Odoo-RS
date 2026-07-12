@@ -13,7 +13,7 @@ import {
   Settings, X, Menu,
 } from "lucide-react";
 
-const ADMIN_LINKS = new Set(["/dashboard", "/analytics"]);
+const ADMIN_LINKS = new Set(["/dashboard", "/analytics", "/departments", "/employees"]);
 
 const NAV_GROUPS = [
   { label: "Overview", items: [

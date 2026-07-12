@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, X, Shield } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { GlassCard } from "@/components/ui/glass-card";
 import { PageHdr } from "@/components/ui/page-header";
@@ -32,6 +32,33 @@ export default function EmployeesPage() {
   }, [session, router]);
 
   if (!session) return null;
+
+  const role = (session?.user as any)?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
+
+  if (!isAdmin) {
+    return (
+      <AppShell>
+        <div className="min-h-[70vh] flex items-center justify-center px-6">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
+              <Shield className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="font-display text-2xl font-normal text-foreground mb-3">Access Restricted</h2>
+            <p className="text-sm font-sans text-muted-foreground mb-8 leading-relaxed">
+              Employees is only available to Admin users. Your current role does not have access.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <motion.button onClick={() => router.push("/challenges")} whileHover={{ scale: 1.02 }}
+                className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90">
+                View Challenges
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   const handleInvite = () => {
     if (!inviteEmail.trim()) return;
