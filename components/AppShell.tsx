@@ -46,11 +46,13 @@ const notifs = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const { theme, toggle } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const [nOpen, setNOpen] = useState(false);
   const [pOpen, setPOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
   const left = collapsed ? 56 : 220;
 
   const crumbs: Record<string, string[]> = {
@@ -147,7 +149,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/35" />
-          <input placeholder="Search…"
+          <input value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && searchQ.trim()) router.push("/ai-assistant"); }} placeholder="Search…"
             className="w-48 pl-8 pr-3 py-1.5 text-xs font-sans bg-muted/50 border border-border/50 focus:outline-none focus:border-primary/30 text-foreground placeholder:text-muted-foreground/35 rounded-md tracking-wide" />
         </div>
         <button onClick={toggle} className="text-muted-foreground hover:text-foreground transition-colors">

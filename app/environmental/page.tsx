@@ -32,6 +32,14 @@ const TT = {
 };
 const AX = { fontSize: 10, fill: "#7a9280", fontFamily: "'Jost',sans-serif" };
 
+function downloadCSV() {
+  const h = "Month,Scope 1,Scope 2,Scope 3\n";
+  const r = carbonData.map(d => `${d.month},${d.s1},${d.s2},${d.s3}`).join("\n");
+  const b = new Blob([h + r], { type: "text/csv" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "environmental-emissions.csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
 export default function EnvironmentalPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -66,7 +74,7 @@ export default function EnvironmentalPage() {
         </div>
 
         <Panel title="Carbon Emissions by Month" sub="Scope 1, 2 & 3 — tCO₂e"
-          action={<button className="flex items-center gap-1.5 text-[10px] font-sans text-muted-foreground hover:text-foreground border border-border/50 px-2.5 py-1.5 rounded-md"><Download className="w-3 h-3" />Export</button>}>
+          action={<button onClick={downloadCSV} className="flex items-center gap-1.5 text-[10px] font-sans text-muted-foreground hover:text-foreground border border-border/50 px-2.5 py-1.5 rounded-md"><Download className="w-3 h-3" />Export</button>}>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={carbonData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
               <defs>

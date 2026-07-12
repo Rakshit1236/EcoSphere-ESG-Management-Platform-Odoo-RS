@@ -84,6 +84,10 @@ function LandingNav() {
     window.addEventListener("scroll", h, { passive: true });
     return () => window.removeEventListener("scroll", h);
   }, []);
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMob(false);
+  };
 
   return (
     <motion.header className={cn(
@@ -98,8 +102,8 @@ function LandingNav() {
           <span className="font-display text-lg font-normal text-white tracking-wide">EcoSphere</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8">
-          {["Platform", "Features", "Pricing", "About"].map(l => (
-            <button key={l} className="text-[11px] font-sans font-light text-white/45 hover:text-white/90 transition-colors tracking-widest uppercase">{l}</button>
+          {[{l:"Platform",t:"features"},{l:"Features",t:"features"},{l:"Pricing",t:"pricing"},{l:"About",t:"about"}].map(({l,t}) => (
+            <button key={l} onClick={() => scrollTo(t)} className="text-[11px] font-sans font-light text-white/45 hover:text-white/90 transition-colors tracking-widest uppercase">{l}</button>
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-5">
@@ -120,8 +124,8 @@ function LandingNav() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-[#060e07]/98 border-t border-white/5 px-8 pb-6 overflow-hidden">
             <div className="flex flex-col gap-4 pt-5">
-              {["Platform", "Features", "Pricing", "About"].map(l => (
-                <button key={l} className="text-sm font-sans text-white/45 hover:text-white text-left uppercase tracking-widest">{l}</button>
+              {[{l:"Platform",t:"features"},{l:"Features",t:"features"},{l:"Pricing",t:"pricing"},{l:"About",t:"about"}].map(({l,t}) => (
+                <button key={l} onClick={() => scrollTo(t)} className="text-sm font-sans text-white/45 hover:text-white text-left uppercase tracking-widest">{l}</button>
               ))}
               <div className="flex gap-4 pt-2">
                 <Link href="/login" className="text-sm font-sans text-white/45 uppercase tracking-widest">Sign in</Link>
@@ -142,7 +146,7 @@ function HeroSection() {
   const textY = useTransform(scrollY, [0, 500], [0, 100]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#040b04]">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#040b04]">
       <motion.div style={{ y: bgY }} className="absolute inset-0 scale-110 will-change-transform">
         <img src={P.hero} alt="Forest" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#040b04]/55 via-[#040b04]/35 to-[#040b04]" />
@@ -173,12 +177,10 @@ function HeroSection() {
               Start free trial <ArrowRight className="w-4 h-4" />
             </motion.button>
           </Link>
-          <Link href="/login">
-            <motion.button whileHover={{ scale: 1.03 }}
-              className="flex items-center gap-2.5 px-9 py-4 border border-white/20 text-white/65 hover:text-white hover:border-white/40 font-sans font-light text-sm tracking-widest uppercase rounded-lg transition-all">
-              <Play className="w-3.5 h-3.5" /> View demo
-            </motion.button>
-          </Link>
+          <motion.button onClick={() => document.getElementById("ai")?.scrollIntoView({ behavior: "smooth" })} whileHover={{ scale: 1.03 }}
+            className="flex items-center gap-2.5 px-9 py-4 border border-white/20 text-white/65 hover:text-white hover:border-white/40 font-sans font-light text-sm tracking-widest uppercase rounded-lg transition-all">
+            <Play className="w-3.5 h-3.5" /> View demo
+          </motion.button>
         </motion.div>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.8 }}
@@ -209,7 +211,7 @@ function FeaturesSection() {
     { Icon: Users, title: "People & DEI Analytics", desc: "Pay equity analysis, board diversity tracking, and employee wellbeing dashboards.", color: "text-[#8ab5a0]" },
   ];
   return (
-    <section className="bg-[#f2ede3] py-32 px-8">
+    <section id="features" className="bg-[#f2ede3] py-32 px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-end mb-20">
           <FadeIn>
@@ -369,7 +371,7 @@ function AiSection() {
     { r: "a", t: "Done. Three audit templates are ready in Reports, pre-filled with Q4 baseline data. Also: switching Building C to LED saves ~42 tCO₂/yr with a 14-month payback." },
   ];
   return (
-    <section className="relative py-32 px-8 bg-[#0a1209] overflow-hidden">
+    <section id="ai" className="relative py-32 px-8 bg-[#0a1209] overflow-hidden">
       <div className="absolute inset-0 opacity-8">
         <ParallaxImg src={P.wide} alt="" strength={25} className="w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a1209] via-[#0a1209]/60 to-[#0a1209]" />
@@ -458,7 +460,7 @@ function TestimonialsSection() {
     { q: "Gamification drove 3× CSR participation across 18,000 employees. Making sustainability genuinely engaging was the missing piece.", name: "Chiara Ricci", title: "Head of ESG", co: "UniCredit" },
   ];
   return (
-    <section className="bg-[#f2ede3] py-32 px-8">
+    <section id="about" className="bg-[#f2ede3] py-32 px-8">
       <div className="max-w-7xl mx-auto">
         <FadeIn>
           <div className="flex items-center gap-6 mb-20">
@@ -508,7 +510,7 @@ function PricingSection() {
       cta: "Contact sales", featured: false },
   ];
   return (
-    <section className="bg-[#050c05] py-32 px-8 overflow-hidden relative">
+    <section id="pricing" className="bg-[#050c05] py-32 px-8 overflow-hidden relative">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
       <div className="relative z-10 max-w-7xl mx-auto">
         <FadeIn>
@@ -648,7 +650,7 @@ function CtaSection() {
             <div className="flex border border-white/12 rounded-lg overflow-hidden bg-white/[0.04] backdrop-blur-sm">
               <input value={email} onChange={e => setEmail(e.target.value)} placeholder="your@company.com"
                 className="flex-1 px-4 py-3 text-xs font-sans bg-transparent text-white placeholder:text-white/20 focus:outline-none" />
-              <button className="px-5 border-l border-white/10 text-xs font-sans text-primary hover:bg-primary/10 transition-colors tracking-widest uppercase">Subscribe</button>
+              <button onClick={() => { if (email) { setEmail(""); alert("Thank you! You've been subscribed."); } }} className="px-5 border-l border-white/10 text-xs font-sans text-primary hover:bg-primary/10 transition-colors tracking-widest uppercase">Subscribe</button>
             </div>
           </div>
         </FadeIn>
@@ -657,6 +659,12 @@ function CtaSection() {
   );
 }
 
+const FOOTER_ROUTES: Record<string, string> = {
+  Dashboard: "/dashboard", Environmental: "/environmental", Social: "/social",
+  Governance: "/governance", Analytics: "/analytics", Documentation: "/reports",
+  "API Reference": "/ai-assistant", Blog: "/reports", Webinars: "/ai-assistant",
+  About: "#about", Careers: "/employees", Press: "/reports", Contact: "/login",
+};
 function Footer() {
   return (
     <footer className="bg-[#040b04] border-t border-white/[0.05] px-8 py-16">
@@ -681,9 +689,16 @@ function Footer() {
             <div key={col.title}>
               <p className="text-[9px] font-sans text-white/20 uppercase tracking-[0.3em] mb-4">{col.title}</p>
               <div className="space-y-2.5">
-                {col.links.map(l => (
-                  <button key={l} className="block text-xs font-sans font-light text-white/30 hover:text-white/65 transition-colors">{l}</button>
-                ))}
+                {col.links.map(l => {
+                  const route = FOOTER_ROUTES[l];
+                  return route?.startsWith("#") ? (
+                    <button key={l} onClick={() => document.getElementById(route.slice(1))?.scrollIntoView({ behavior: "smooth" })}
+                      className="block text-xs font-sans font-light text-white/30 hover:text-white/65 transition-colors">{l}</button>
+                  ) : (
+                    <Link key={l} href={route || "/login"}
+                      className="block text-xs font-sans font-light text-white/30 hover:text-white/65 transition-colors">{l}</Link>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -692,7 +707,7 @@ function Footer() {
           <p className="text-[10px] font-sans text-white/18">© 2025 EcoSphere Technologies, Inc.</p>
           <div className="flex items-center gap-6">
             {["Privacy", "Terms", "Security"].map(l => (
-              <button key={l} className="text-[10px] font-sans text-white/18 hover:text-white/40 transition-colors">{l}</button>
+              <Link key={l} href="/login" className="text-[10px] font-sans text-white/18 hover:text-white/40 transition-colors">{l}</Link>
             ))}
           </div>
         </div>

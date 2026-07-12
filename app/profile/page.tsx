@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "motion/react";
-import { Lock } from "lucide-react";
+import { Lock, KeyRound } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { PageHdr } from "@/components/ui/page-header";
 import { Panel } from "@/components/ui/panel";
@@ -14,6 +14,9 @@ export default function ProfilePage() {
   const router = useRouter();
   const [notifState, setNotifState] = useState({ email: true, push: true, ai: true });
   const [twoF, setTwoF] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [pwForm, setPwForm] = useState({ cur: "", nw: "", confirm: "" });
 
   useEffect(() => {
     if (!session) router.push("/login");
@@ -51,9 +54,9 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
-          <motion.button whileHover={{ scale: 1.02 }}
+          <motion.button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }} whileHover={{ scale: 1.02 }}
             className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 tracking-widest uppercase shadow-md shadow-primary/15">
-            Save changes
+            {saved ? "Saved!" : "Save changes"}
           </motion.button>
         </Panel>
 
@@ -83,9 +86,27 @@ export default function ProfilePage() {
             </div>
             <Toggle on={twoF} set={setTwoF} />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-border text-xs font-sans text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all rounded-md">
-            <Lock className="w-3.5 h-3.5" />Change password
+          <button onClick={() => setShowPw(!showPw)} className="flex items-center gap-2 px-4 py-2.5 border border-border text-xs font-sans text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all rounded-md">
+            <Lock className="w-3.5 h-3.5" />{showPw ? "Cancel" : "Change password"}
           </button>
+          {showPw && (
+            <div className="mt-5 space-y-4">
+              {(["Current password", "New password", "Confirm new password"] as const).map((l, i) => {
+                const k = i === 0 ? "cur" : i === 1 ? "nw" : "confirm";
+                return (
+                  <div key={l}>
+                    <label className="text-[10px] font-sans text-muted-foreground/55 uppercase tracking-[0.2em] block mb-2">{l}</label>
+                    <input type="password" value={pwForm[k]} onChange={e => setPwForm(p => ({ ...p, [k]: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 text-sm font-sans bg-muted/50 border border-border focus:outline-none focus:border-primary/40 text-foreground rounded-md" />
+                  </div>
+                );
+              })}
+              <motion.button whileHover={{ scale: 1.02 }}
+                className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 tracking-widest uppercase shadow-md shadow-primary/15">
+                Update password
+              </motion.button>
+            </div>
+          )}
         </Panel>
       </div>
     </AppShell>

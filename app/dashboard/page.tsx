@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "motion/react";
@@ -88,15 +88,30 @@ function KPICard({ label, value, change, up, icon, sub, delay = 0 }: {
   );
 }
 
+function downloadCSV() {
+  const headers = "Month,Scope 1,Scope 2,Scope 3\n";
+  const rows = carbonData.map(r => `${r.month},${r.s1},${r.s2},${r.s3}`).join("\n");
+  const blob = new Blob([headers + rows], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "carbon-emissions.csv";
+  a.click(); URL.revokeObjectURL(url);
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!session) router.push("/login");
   }, [session, router]);
 
   if (!session) return null;
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1500);
+  };
 
   const kpis = [
     { label: "ESG Total Score", value: "87.4", change: "+3.2pts", up: true, icon: <Globe className="w-4.5 h-4.5" />, sub: "Top 12% industry" },
@@ -117,11 +132,12 @@ export default function DashboardPage() {
             <p className="text-sm font-sans text-muted-foreground font-light mt-1.5">ESG performance — Q4 2024</p>
           </div>
           <div className="flex gap-3">
-            <motion.button whileHover={{ scale: 1.02 }} className="flex items-center gap-2 px-4 py-2 border border-border text-xs font-sans text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all rounded-md">
+            <motion.button onClick={downloadCSV} whileHover={{ scale: 1.02 }} className="flex items-center gap-2 px-4 py-2 border border-border text-xs font-sans text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all rounded-md">
               <Download className="w-3.5 h-3.5" />Export
             </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 transition-colors shadow-md shadow-primary/15">
-              <Zap className="w-3.5 h-3.5" />Refresh
+            <motion.button onClick={handleRefresh} whileHover={{ scale: 1.02 }}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 transition-colors shadow-md shadow-primary/15">
+              <Zap className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />{refreshing ? "Refreshing..." : "Refresh"}
             </motion.button>
           </div>
         </div>
