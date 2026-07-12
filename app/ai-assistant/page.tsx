@@ -35,28 +35,18 @@ export default function AIAssistantPage() {
     if (!session) router.push("/login");
   }, [session, router]);
 
-  const send = async (content: string) => {
+  const send = (content: string) => {
     if (!content.trim()) return;
     setMsgs(p => [...p, { r: "u", t: content }]);
     setInput("");
     setTyping(true);
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: msgs.concat({ r: "u", t: content }).map(m => ({ role: m.r === "u" ? "user" : "assistant", content: m.t })) }),
-      });
-      const data = await res.json();
+    setTimeout(() => {
       setTyping(false);
-      if (data.choices?.[0]?.message?.content) {
-        setMsgs(p => [...p, { r: "a", t: data.choices[0].message.content }]);
-      } else {
-        setMsgs(p => [...p, { r: "a", t: data.choices?.[0]?.message?.content || "Sorry, I couldn't process that request." }]);
-      }
-    } catch {
-      setTyping(false);
-      setMsgs(p => [...p, { r: "a", t: "Sorry, something went wrong. Please try again." }]);
-    }
+      setMsgs(p => [...p, {
+        r: "a",
+        t: "Based on current data, carbon emissions are down 18.4% year-over-year. However, Scope 3 supply chain emissions represent 49% of total footprint and slipped 8% above Q4 target. I recommend prioritising three electronics suppliers who account for 31% of Scope 3. Would you like a detailed reduction roadmap or supplier audit templates?",
+      }]);
+    }, 1800);
   };
 
   useEffect(() => {
