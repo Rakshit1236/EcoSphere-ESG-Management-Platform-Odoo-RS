@@ -316,7 +316,7 @@ export default function GamificationHub() {
                 <label className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-input)] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all cursor-pointer group">
                   <ImagePlus className="w-10 h-10 text-[var(--text-muted)] group-hover:text-emerald-500 transition-colors mb-2" />
                   <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]">Click to upload an image</span>
-                  <span className="text-xs text-[var(--text-muted)] mt-1">JPG, PNG, GIF, WebP &middot; Max 10MB</span>
+                  <span className="text-xs text-[var(--text-muted)] mt-1">JPG, PNG, GIF, WebP &middot; Max 12MB</span>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
