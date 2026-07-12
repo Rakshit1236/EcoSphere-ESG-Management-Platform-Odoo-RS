@@ -1,5 +1,5 @@
 import { PrismaClient, CategoryType, ChallengeStatus, ChallengeDifficulty, UserRole, DepartmentStatus, RewardStatus, ApprovalStatus, ComplianceIssueStatus } from "@prisma/client";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
