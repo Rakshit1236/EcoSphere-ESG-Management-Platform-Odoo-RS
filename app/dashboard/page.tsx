@@ -161,7 +161,7 @@ export default function ExecutiveDashboard() {
                     <defs>
                       {sourceNames.map((n, i) => (
                         <linearGradient key={n} id={`g${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.25} />
+                          <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.35} />
                           <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
                         </linearGradient>
                       ))}
