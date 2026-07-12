@@ -25,8 +25,8 @@ function ParallaxImg({ src, alt, strength = 40, className }: {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@ecosphere.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
