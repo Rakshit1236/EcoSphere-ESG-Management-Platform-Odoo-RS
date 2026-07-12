@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Leaf, Trophy, Zap, Star, Award, Target, Gift, Lock, CheckCircle2,
-  ArrowRight, BarChart3, Sparkles, Clock, Upload, LogOut, ImagePlus, X,
+  ArrowRight, BarChart3, Sparkles, Clock, Upload, LogOut, ImagePlus, X, User,
 } from "lucide-react";
 
 interface UserData {
@@ -138,6 +138,12 @@ export default function GamificationHub() {
               <Button variant="ghost" size="sm" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden md:inline">Dashboard</span>
+              </Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <User className="w-4 h-4" />
+                <span className="hidden md:inline">Profile</span>
               </Button>
             </Link>
             <ThemeToggle />

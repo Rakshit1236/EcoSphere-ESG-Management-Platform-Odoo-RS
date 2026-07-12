@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-  Leaf, ArrowLeft, AlertTriangle, Users, BarChart3, Shield, Activity, LogOut,
+  Leaf, ArrowLeft, AlertTriangle, Users, BarChart3, Shield, Activity, LogOut, User,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -85,6 +85,9 @@ export default function ExecutiveDashboard() {
           <div className="flex items-center gap-2">
             <Link href="/gamification">
               <Button variant="ghost" size="sm" className="gap-2"><ArrowLeft className="w-4 h-4" /><span className="hidden sm:inline">Hub</span></Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="ghost" size="sm" className="gap-2"><User className="w-4 h-4" /><span className="hidden sm:inline">Profile</span></Button>
             </Link>
             <ThemeToggle />
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-color)]">
