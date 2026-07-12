@@ -1,0 +1,99 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { motion } from "motion/react";
+import { ArrowRight, Download, Globe, Cloud, Leaf, Briefcase, Target, FileText } from "lucide-react";
+import AppShell from "@/components/AppShell";
+import { Panel } from "@/components/ui/panel";
+import { PageHdr } from "@/components/ui/page-header";
+import { Chip } from "@/components/ui/chip";
+
+export default function ReportsPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session) router.push("/login");
+  }, [session, router]);
+
+  if (!session) return null;
+
+  return (
+    <AppShell>
+      <div className="space-y-7">
+        <div className="flex items-end justify-between pt-1">
+          <PageHdr tag="Intelligence" title="Reports." sub="Generate, schedule and export ESG reports" />
+          <motion.button whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 shadow-md shadow-primary/15">
+            Generate <ArrowRight className="w-3.5 h-3.5" />
+          </motion.button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Panel title="Templates">
+            <div className="space-y-0">
+              {[
+                { n: "GRI Standards", d: "Global Reporting Initiative", I: Globe },
+                { n: "TCFD Climate", d: "Climate-related Financial Disclosures", I: Cloud },
+                { n: "CDP Carbon", d: "Carbon Disclosure Project", I: Leaf },
+                { n: "ESG Investor", d: "Stakeholder ESG summary", I: Briefcase },
+                { n: "UN SDG Alignment", d: "Sustainable Development Goals", I: Target },
+                { n: "Annual Sustainability", d: "Full-year consolidated report", I: FileText },
+              ].map(t => (
+                <motion.button key={t.n} whileHover={{ x: 4 }} transition={{ duration: 0.15 }}
+                  className="w-full flex items-center justify-between py-4 border-b border-border/50 last:border-0 group text-left">
+                  <div>
+                    <p className="text-sm font-sans font-light text-foreground group-hover:text-primary transition-colors">{t.n}</p>
+                    <p className="text-[11px] font-sans text-muted-foreground mt-0.5">{t.d}</p>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/25 group-hover:text-primary transition-colors flex-shrink-0" />
+                </motion.button>
+              ))}
+            </div>
+          </Panel>
+
+          <div className="space-y-4">
+            <Panel title="Recent Reports">
+              <div className="space-y-0">
+                {[
+                  { n: "Q4 2024 ESG Summary", d: "Dec 15, 2024", s: "4.2 MB" },
+                  { n: "Carbon Audit Report", d: "Dec 08, 2024", s: "2.8 MB" },
+                  { n: "TCFD Climate Disclosure", d: "Nov 30, 2024", s: "6.1 MB" },
+                  { n: "Annual Sustainability 2024", d: "Nov 20, 2024", s: "12.4 MB" },
+                ].map(r => (
+                  <div key={r.n} className="flex items-center justify-between py-3.5 border-b border-border/50 last:border-0">
+                    <div>
+                      <p className="text-sm font-sans font-light text-foreground">{r.n}</p>
+                      <p className="text-[10px] font-sans text-muted-foreground">{r.d} · {r.s}</p>
+                    </div>
+                    <button className="text-muted-foreground/35 hover:text-primary transition-colors"><Download className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel title="Deadlines">
+              <div className="space-y-0">
+                {[
+                  { n: "CDP Annual Submission", d: "Jan 31, 2025", days: 19, u: true },
+                  { n: "GRI Standards Review", d: "Feb 15, 2025", days: 34, u: false },
+                  { n: "Annual Report Filing", d: "Mar 01, 2025", days: 48, u: false },
+                ].map(d => (
+                  <div key={d.n} className="flex items-center justify-between py-3.5 border-b border-border/50 last:border-0">
+                    <div>
+                      <p className="text-xs font-sans font-medium text-foreground">{d.n}</p>
+                      <p className="text-[10px] font-sans text-muted-foreground">{d.d}</p>
+                    </div>
+                    <Chip tone={d.u ? "amber" : "muted"}>{d.days}d</Chip>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}

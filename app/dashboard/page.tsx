@@ -1,132 +1,111 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { useSession } from "next-auth/react";
+import { motion } from "motion/react";
 import {
-  Leaf, ArrowLeft, AlertTriangle, Users, BarChart3, Shield, Activity, LogOut, User,
-  Download, FileSpreadsheet, Lock,
-} from "lucide-react";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend,
+  AreaChart, Area, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
+import { Globe, Leaf, Zap, Shield, Heart, Users, Download, ArrowUp, ArrowDown } from "lucide-react";
+import AppShell from "@/components/AppShell";
+import { GlassCard } from "@/components/ui/glass-card";
+import { ScoreRing } from "@/components/ui/score-ring";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Panel } from "@/components/ui/panel";
 
-interface ScoreData {
-  overallEsg: number; totalDepartments: number; totalOverdueIssues: number;
-  departments: { departmentId: string; departmentName: string; departmentCode: string; environmentalScore: number; socialScore: number; governanceScore: number; totalScore: number; hasOverdueCompliance: boolean }[];
-  weighting: { environmental: number; social: number; governance: number };
+function cn(...c: (string | boolean | undefined | null)[]) {
+  return c.filter(Boolean).join(" ");
 }
-interface EmissionsData { bySource: Record<string, number>; byMonth: Record<string, Record<string, number>>; }
 
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444"];
+const carbonData = [
+  { month: "Jan", s1: 1420, s2: 980, s3: 2340 },
+  { month: "Feb", s1: 1380, s2: 920, s3: 2180 },
+  { month: "Mar", s1: 1290, s2: 880, s3: 2050 },
+  { month: "Apr", s1: 1310, s2: 840, s3: 1980 },
+  { month: "May", s1: 1260, s2: 810, s3: 1920 },
+  { month: "Jun", s1: 1190, s2: 790, s3: 1840 },
+  { month: "Jul", s1: 1140, s2: 760, s3: 1780 },
+  { month: "Aug", s1: 1080, s2: 730, s3: 1710 },
+  { month: "Sep", s1: 1050, s2: 710, s3: 1680 },
+  { month: "Oct", s1: 1020, s2: 690, s3: 1640 },
+  { month: "Nov", s1: 980, s2: 660, s3: 1590 },
+  { month: "Dec", s1: 940, s2: 640, s3: 1540 },
+];
 
-function RadialGauge({ score }: { score: number }) {
-  const fill = score >= 70 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+const trendData = [
+  { q: "Q1'23", e: 68, s: 72, g: 75, t: 71 },
+  { q: "Q2'23", e: 71, s: 74, g: 76, t: 73 },
+  { q: "Q3'23", e: 73, s: 76, g: 78, t: 75 },
+  { q: "Q4'23", e: 76, s: 79, g: 80, t: 78 },
+  { q: "Q1'24", e: 79, s: 81, g: 82, t: 80 },
+  { q: "Q2'24", e: 82, s: 84, g: 84, t: 83 },
+  { q: "Q3'24", e: 84, s: 86, g: 86, t: 85 },
+  { q: "Q4'24", e: 87, s: 88, g: 91, t: 87 },
+];
+
+const complianceData = [
+  { name: "Compliant", value: 78, color: "#56b874" },
+  { name: "In Progress", value: 14, color: "#8ab5a0" },
+  { name: "At Risk", value: 5, color: "#c8a96e" },
+  { name: "Exempt", value: 3, color: "#253825" },
+];
+
+const activity = [
+  { id: 1, user: "Sarah Chen", action: "completed Carbon Audit Q4 2024", time: "2m ago", type: "audit" },
+  { id: 2, user: "AI System", action: "flagged Scope 3 anomaly in Supply Chain", time: "18m ago", type: "alert" },
+  { id: 3, user: "Marcus Webb", action: "submitted renewable energy report Nov–Dec", time: "1h ago", type: "report" },
+  { id: 4, user: "HR Team", action: "launched Q1 2025 Employee Wellness Challenge", time: "3h ago", type: "challenge" },
+  { id: 5, user: "Priya Nair", action: "updated Board Diversity policy document", time: "5h ago", type: "policy" },
+];
+
+const TT = {
+  background: "rgba(12,20,10,0.96)", border: "1px solid rgba(86,184,116,0.15)",
+  borderRadius: "6px", color: "#eeeae0", fontSize: "11px", fontFamily: "'Jost',sans-serif",
+};
+const AX = { fontSize: 10, fill: "#7a9280", fontFamily: "'Jost',sans-serif" };
+
+function KPICard({ label, value, change, up, icon, sub, delay = 0 }: {
+  label: string; value: string; change?: string; up?: boolean; icon: React.ReactNode; sub?: string; delay?: number;
+}) {
   return (
-    <div className="relative w-44 h-44 mx-auto">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadialBarChart cx="50%" cy="50%" innerRadius="72%" outerRadius="100%" barSize={10} data={[{ name: "ESG", value: score, fill }]} startAngle={90} endAngle={-270}>
-          <RadialBar dataKey="value" cornerRadius={6} background={{ fill: "var(--bg-input)" }} />
-        </RadialBarChart>
-      </ResponsiveContainer>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold text-[var(--text-primary)]">{score}</span>
-        <span className="text-[11px] text-[var(--text-muted)]">Overall ESG</span>
-      </div>
-    </div>
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5, ease: "easeOut" }}>
+      <GlassCard dark hover className="p-6 group h-full border border-white/[0.07]">
+        <div className="flex items-start justify-between mb-5">
+          <div className="text-muted-foreground/45 group-hover:text-primary transition-colors duration-300">{icon}</div>
+          {change && (
+            <span className={cn("text-xs font-sans flex items-center gap-1 font-light", up ? "text-primary" : "text-amber-400")}>
+              {up ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}{change}
+            </span>
+          )}
+        </div>
+        <p className="font-display text-2xl font-normal text-foreground mb-1 tracking-tight">{value}</p>
+        <p className="text-xs font-sans text-muted-foreground font-light">{label}</p>
+        {sub && <p className="text-[10px] font-sans text-muted-foreground/40 mt-1 font-light">{sub}</p>}
+      </GlassCard>
+    </motion.div>
   );
 }
 
-function downloadCSV(data: string, filename: string) {
-  const blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-export default function ExecutiveDashboard() {
+export default function DashboardPage() {
+  const { data: session } = useSession();
   const router = useRouter();
-  const [scores, setScores] = useState<ScoreData | null>(null);
-  const [emissions, setEmissions] = useState<EmissionsData | null>(null);
-  const [userName, setUserName] = useState("");
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/session").then(r => r.json()).then(d => {
-      if (!d.user) { router.push("/login"); return; }
-      setUserName(d.user.name || "");
-      const role = d.user.role;
-      if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(true);
-        fetch("/api/departments/scores").then(r => r.json()).then(d => setScores(d.data));
-        fetch("/api/emissions").then(r => r.json()).then(d => setEmissions(d));
-      }
-    });
-  }, [router]);
+    if (!session) router.push("/login");
+  }, [session, router]);
 
-  function exportReport() {
-    if (!scores || !emissions) return;
-    setExporting(true);
+  if (!session) return null;
 
-    const lines: string[] = [];
-    lines.push("EcoSphere ESG Report");
-    lines.push(`Generated,${new Date().toLocaleString()}`);
-    lines.push(`Overall ESG Score,${scores.overallEsg}`);
-    lines.push(`Total Departments,${scores.totalDepartments}`);
-    lines.push(`Overdue Compliance Issues,${scores.totalOverdueIssues}`);
-    lines.push(`Weighting,Environmental ${scores.weighting.environmental * 100}% / Social ${scores.weighting.social * 100}% / Governance ${scores.weighting.governance * 100}%`);
-    lines.push("");
-
-    lines.push("Department Leaderboard");
-    lines.push("Rank,Department,Code,Environmental,Social,Governance,Total,Overdue Compliance");
-    scores.departments.forEach((d, i) => {
-      lines.push(`${i + 1},"${d.departmentName}",${d.departmentCode},${d.environmentalScore},${d.socialScore},${d.governanceScore},${d.totalScore},${d.hasOverdueCompliance ? "YES" : "NO"}`);
-    });
-    lines.push("");
-
-    lines.push("Emissions by Source");
-    lines.push("Source,Total Emissions (kg CO2e)");
-    Object.entries(emissions.bySource).forEach(([name, value]) => {
-      lines.push(`"${name}",${Math.round(value).toLocaleString()}`);
-    });
-    lines.push("");
-
-    const allMonths = [...new Set(Object.keys(emissions.byMonth))].sort();
-    const allSources = [...new Set(Object.values(emissions.byMonth).flatMap(s => Object.keys(s)))];
-    lines.push("Monthly Emissions Trend");
-    lines.push(["Month", ...allSources].join(","));
-    allMonths.forEach(m => {
-      const monthLabel = new Date(m + "-01").toLocaleDateString("en-US", { month: "long", year: "numeric" });
-      const sources = emissions.byMonth[m];
-      lines.push([monthLabel, ...allSources.map(s => Math.round(sources[s] || 0))].join(","));
-    });
-
-    downloadCSV(lines.join("\n"), `ecosphere-esg-report-${new Date().toISOString().slice(0, 10)}.csv`);
-    setExporting(false);
-  }
-
-  const chartData = emissions
-    ? Object.entries(emissions.byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([m, s]) => ({
-        month: new Date(m + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-        ...s,
-      }))
-    : [];
-  const sourceNames = emissions ? Object.keys(emissions.bySource) : [];
-  const pieData = emissions ? Object.entries(emissions.bySource).map(([n, v]) => ({ name: n, value: Math.round(v) })) : [];
+  const kpis = [
+    { label: "ESG Total Score", value: "87.4", change: "+3.2pts", up: true, icon: <Globe className="w-4.5 h-4.5" />, sub: "Top 12% industry" },
+    { label: "Carbon Footprint", value: "3,124 tCO₂", change: "−18.4%", up: true, icon: <Leaf className="w-4.5 h-4.5" />, sub: "vs Q3 2024" },
+    { label: "Renewable Energy", value: "68.2%", change: "+4.1%", up: true, icon: <Zap className="w-4.5 h-4.5" />, sub: "Target 75% by 2025" },
+    { label: "Compliance Rate", value: "94.2%", change: "+1.8%", up: true, icon: <Shield className="w-4.5 h-4.5" />, sub: "78 of 83 controls" },
+    { label: "CSR Participants", value: "2,847", change: "+12%", up: true, icon: <Heart className="w-4.5 h-4.5" />, sub: "Employees engaged" },
+    { label: "Social Score", value: "88.1", change: "+2.6pts", up: true, icon: <Users className="w-4.5 h-4.5" />, sub: "Employee wellbeing" },
+  ];
 
   if (isAdmin === null) {
     return (
@@ -163,184 +142,127 @@ export default function ExecutiveDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
-      <nav className="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--bg-nav)] backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/gamification" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-              <Leaf className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="text-base font-bold text-[var(--text-primary)] hidden sm:inline">EcoSphere</span>
-            <Badge variant="info" className="text-[10px] uppercase tracking-wide ml-0.5">Admin</Badge>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link href="/gamification">
-              <Button variant="ghost" size="sm" className="gap-2"><ArrowLeft className="w-4 h-4" /><span className="hidden sm:inline">Hub</span></Button>
-            </Link>
-            <Link href="/profile">
-              <Button variant="ghost" size="sm" className="gap-2"><User className="w-4 h-4" /><span className="hidden sm:inline">Profile</span></Button>
-            </Link>
-            <ThemeToggle />
-            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-color)]">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-emerald-600 text-white text-xs font-semibold">{userName?.split(" ").map((n: string) => n[0]).join("") || "?"}</AvatarFallback>
-              </Avatar>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => signOut({ callbackUrl: "/login" })} title="Sign out">
-              <LogOut className="w-4 h-4 text-[var(--text-muted)]" />
-            </Button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+    <AppShell>
+      <div className="space-y-7">
+        <div className="flex items-end justify-between pt-1">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Executive Analytics</h1>
-            <p className="text-sm text-[var(--text-muted)] mt-0.5">Real-time ESG performance across all departments</p>
+            <p className="text-[10px] font-sans text-primary tracking-[0.35em] uppercase mb-2">Overview</p>
+            <h1 className="font-display font-light text-foreground" style={{ fontSize: "clamp(1.75rem,4vw,2.5rem)" }}>Good morning, {session.user?.name?.split(" ")[0] || "User"}.</h1>
+            <p className="text-sm font-sans text-muted-foreground font-light mt-1.5">ESG performance — Q4 2024</p>
           </div>
-          <Button onClick={exportReport} disabled={exporting || !scores} variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />{exporting ? "Exporting..." : "Export Report"}
-          </Button>
+          <div className="flex gap-3">
+            <motion.button whileHover={{ scale: 1.02 }} className="flex items-center gap-2 px-4 py-2 border border-border text-xs font-sans text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all rounded-md">
+              <Download className="w-3.5 h-3.5" />Export
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-sans font-medium rounded-md hover:bg-primary/90 transition-colors shadow-md shadow-primary/15">
+              <Zap className="w-3.5 h-3.5" />Refresh
+            </motion.button>
+          </div>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          {[
-            { label: "Overall ESG", value: scores?.overallEsg ?? "—", icon: Activity, color: "emerald" },
-            { label: "Departments", value: scores?.totalDepartments ?? 0, icon: Users, color: "blue" },
-            { label: "Overdue Issues", value: scores?.totalOverdueIssues ?? 0, icon: AlertTriangle, color: "red" },
-            { label: "Weighting", value: "E40 S30 G30", icon: Shield, color: "amber" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] text-[var(--text-muted)] mb-0.5">{label}</p>
-                    <p className={`text-2xl font-bold ${color === "red" ? "text-red-500" : "text-[var(--text-primary)]"}`}>{value}</p>
-                  </div>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${color}-100 dark:bg-${color}-500/20`}>
-                    <Icon className={`w-5 h-5 text-${color}-500`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+          {kpis.map((k, i) => <KPICard key={k.label} {...k} delay={i * 0.06} />)}
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Company ESG Score</CardTitle>
-              <CardDescription>Weighted composite score</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center pb-5">
-              <RadialGauge score={scores?.overallEsg || 0} />
-              <div className="flex gap-6 mt-3">
-                {[{ l: "Environmental", c: "text-emerald-500" }, { l: "Social", c: "text-blue-500" }, { l: "Governance", c: "text-amber-500" }].map(({ l, c }) => (
-                  <div key={l} className="text-center"><p className={`text-[11px] font-medium ${c}`}>{l}</p></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Panel title="ESG Score" sub="Overall composite">
+            <div className="flex items-center gap-5">
+              <ScoreRing score={87} size={110} />
+              <div className="flex-1 space-y-3.5">
+                {[
+                  { l: "Environmental", v: 84, c: "bg-primary" },
+                  { l: "Social", v: 88, c: "bg-[#8ab5a0]" },
+                  { l: "Governance", v: 91, c: "bg-[#c8a96e]" },
+                ].map(p => (
+                  <ProgressBar key={p.l} label={p.l} value={p.v} color={p.c} />
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Emissions Trend</CardTitle>
-              <CardDescription>Carbon emissions by source over time (kg CO&#8322;e)</CardDescription>
-            </CardHeader>
-            <CardContent className="h-64">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      {sourceNames.map((n, i) => (
-                        <linearGradient key={n} id={`g${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.25} />
-                          <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                    <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} />
-                    <YAxis stroke="var(--text-muted)" fontSize={11} />
-                    <Tooltip contentStyle={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "10px", color: "var(--text-primary)", fontSize: "12px" }} formatter={(v: number) => [`${Math.round(v).toLocaleString()} kg`]} />
-                    {sourceNames.map((n, i) => (
-                      <Area key={n} type="monotone" dataKey={n} stackId="1" stroke={COLORS[i % COLORS.length]} fill={`url(#g${i})`} strokeWidth={1.5} />
+            </div>
+          </Panel>
+          <div className="lg:col-span-2">
+            <Panel title="Carbon Emissions" sub="Monthly tCO₂e — Scope 1, 2 & 3">
+              <ResponsiveContainer width="100%" height={170}>
+                <AreaChart data={carbonData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <defs>
+                    {[["cg1", "#56b874"], ["cg2", "#8ab5a0"]].map(([id, c]) => (
+                      <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={c} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={c} stopOpacity={0} />
+                      </linearGradient>
                     ))}
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm">Loading...</div>}
-            </CardContent>
-          </Card>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 4" stroke="rgba(238,234,224,0.04)" />
+                  <XAxis dataKey="month" tick={AX} axisLine={false} tickLine={false} />
+                  <YAxis tick={AX} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={TT} />
+                  <Area type="monotone" dataKey="s1" name="Scope 1" stroke="#56b874" fill="url(#cg1)" strokeWidth={1.5} />
+                  <Area type="monotone" dataKey="s3" name="Scope 3" stroke="#8ab5a0" fill="url(#cg2)" strokeWidth={1.5} />
+                  <Legend iconType="square" iconSize={6} wrapperStyle={{ fontSize: "10px", color: "#7a9280", fontFamily: "'Jost'" }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Panel>
+          </div>
         </div>
 
-        {/* Bottom Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Emissions by Source</CardTitle>
-              <CardDescription>Distribution across operations</CardDescription>
-            </CardHeader>
-            <CardContent className="h-56">
-              {pieData.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Panel title="ESG Score Trend" sub="8 quarters">
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={trendData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="2 4" stroke="rgba(238,234,224,0.04)" />
+                <XAxis dataKey="q" tick={AX} axisLine={false} tickLine={false} />
+                <YAxis domain={[65, 95]} tick={AX} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={TT} />
+                <Line type="monotone" dataKey="t" name="Total" stroke="#56b874" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="e" name="Environmental" stroke="#8ab5a0" strokeWidth={1.2} dot={false} strokeDasharray="4 2" />
+                <Line type="monotone" dataKey="s" name="Social" stroke="#5b8a9a" strokeWidth={1.2} dot={false} strokeDasharray="4 2" />
+                <Line type="monotone" dataKey="g" name="Governance" stroke="#c8a96e" strokeWidth={1.2} dot={false} strokeDasharray="4 2" />
+                <Legend iconType="square" iconSize={6} wrapperStyle={{ fontSize: "10px", color: "#7a9280", fontFamily: "'Jost'" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Panel>
+          <Panel title="Compliance" sub="Controls status breakdown">
+            <div className="flex items-center gap-6">
+              <div style={{ width: 130, height: 130, flexShrink: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} dataKey="value">
-                      {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    <Pie data={complianceData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                      {complianceData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "10px", color: "var(--text-primary)", fontSize: "12px" }} formatter={(v: number) => [`${v.toLocaleString()} kg`]} />
-                    <Legend formatter={(v: string) => <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>{v}</span>} />
+                    <Tooltip contentStyle={TT} />
                   </PieChart>
                 </ResponsiveContainer>
-              ) : <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm">Loading...</div>}
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-1.5"><BarChart3 className="w-4 h-4 text-emerald-500" />Department Leaderboard</CardTitle>
-              <CardDescription>Ranked by total ESG score</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-8">#</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead className="text-right">Env</TableHead>
-                    <TableHead className="text-right">Soc</TableHead>
-                    <TableHead className="text-right">Gov</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="w-8"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {scores?.departments.map((d, i) => (
-                    <TableRow key={d.departmentId}>
-                      <TableCell>
-                        <span className={`font-bold text-xs ${i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-700" : "text-[var(--text-muted)]"}`}>{i + 1}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-[var(--text-primary)] text-sm">{d.departmentName}</span>
-                          <Badge variant="secondary" className="text-[10px]">{d.departmentCode}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm"><span className="text-emerald-500 font-medium">{d.environmentalScore}</span></TableCell>
-                      <TableCell className="text-right text-sm"><span className="text-blue-500 font-medium">{d.socialScore}</span></TableCell>
-                      <TableCell className="text-right text-sm"><span className="text-amber-500 font-medium">{d.governanceScore}</span></TableCell>
-                      <TableCell className="text-right text-sm font-bold text-[var(--text-primary)]">{d.totalScore}</TableCell>
-                      <TableCell>{d.hasOverdueCompliance && <span title="Overdue compliance"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /></span>}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+              </div>
+              <div className="flex-1 space-y-3">
+                {complianceData.map(d => (
+                  <div key={d.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: d.color }} />
+                      <span className="text-[11px] font-sans text-muted-foreground font-light">{d.name}</span>
+                    </div>
+                    <span className="text-xs font-sans text-foreground">{d.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Panel>
         </div>
-      </main>
-    </div>
+
+        <Panel title="Recent Activity" sub="Live ESG platform events">
+          <div className="space-y-0">
+            {activity.map(a => (
+              <div key={a.id} className="flex items-start gap-4 py-4 border-b border-border/50 last:border-0 hover:bg-muted/10 -mx-2 px-2 rounded-lg transition-colors">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs font-sans text-foreground font-light leading-relaxed">
+                    <span className="font-medium">{a.user}</span> {a.action}
+                  </p>
+                  <p className="text-[10px] font-sans text-muted-foreground/35 mt-1">{a.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+    </AppShell>
   );
 }
