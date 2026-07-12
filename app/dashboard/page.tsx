@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "motion/react";
@@ -106,40 +106,6 @@ export default function DashboardPage() {
     { label: "CSR Participants", value: "2,847", change: "+12%", up: true, icon: <Heart className="w-4.5 h-4.5" />, sub: "Employees engaged" },
     { label: "Social Score", value: "88.1", change: "+2.6pts", up: true, icon: <Users className="w-4.5 h-4.5" />, sub: "Employee wellbeing" },
   ];
-
-  if (isAdmin === null) {
-    return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-        <span className="text-[var(--text-muted)]">Loading...</span>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-        <Card className="max-w-md mx-4">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-red-100 dark:bg-red-500/20 flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-red-500" />
-            </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Access Restricted</h2>
-            <p className="text-sm text-[var(--text-muted)] mb-6">
-              The Executive Dashboard is only available to Admin users. Your current role does not have access.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Link href="/gamification">
-                <Button variant="outline" className="gap-2"><ArrowLeft className="w-4 h-4" />Back to Hub</Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="ghost" className="gap-2"><User className="w-4 h-4" />My Profile</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <AppShell>
