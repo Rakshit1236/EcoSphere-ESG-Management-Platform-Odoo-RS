@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${AI_API_KEY}`,
+        "HTTP-Referer": "https://ecosphere-esg.vercel.app",
+        "X-Title": "EcoSphere ESG",
       },
       body: JSON.stringify(body),
     });
