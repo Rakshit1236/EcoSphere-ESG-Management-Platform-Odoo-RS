@@ -13,6 +13,8 @@ import {
   Settings, X, Menu,
 } from "lucide-react";
 
+const ADMIN_LINKS = new Set(["/dashboard", "/analytics"]);
+
 const NAV_GROUPS = [
   { label: "Overview", items: [
     { id: "/dashboard", label: "Dashboard", Icon: Home },
@@ -73,6 +75,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const trail = crumbs[pathname] || ["EcoSphere", pathname.slice(1)];
   const unread = notifs.filter(n => !n.read).length;
   const initials = session?.user?.name?.split(" ").map(n => n[0]).join("") || "?";
+  const role = (session?.user as any)?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,12 +99,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
-          {NAV_GROUPS.map(g => (
+          {NAV_GROUPS.map(g => {
+            const visible = isAdmin ? g.items : g.items.filter(i => !ADMIN_LINKS.has(i.id));
+            if (visible.length === 0) return null;
+            return (
             <div key={g.label} className="mb-4">
               {!collapsed && (
                 <p className="px-4 text-[9px] font-sans font-medium text-muted-foreground/40 uppercase tracking-[0.22em] mb-1">{g.label}</p>
               )}
-              {g.items.map(({ id, label, Icon }) => {
+              {visible.map(({ id, label, Icon }) => {
                 const active = pathname === id;
                 return (
                   <Link key={id} href={id}
@@ -122,7 +129,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 );
               })}
             </div>
-          ))}
+            );
+          })}
         </nav>
         <div className="border-t border-sidebar-border px-4 py-3 flex-shrink-0">
           <Link href="/profile" className="flex items-center gap-2.5 overflow-hidden hover:opacity-80 transition-opacity">
