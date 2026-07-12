@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Leaf, ArrowLeft, AlertTriangle, Users, BarChart3, Shield, Activity, LogOut, User,
+  Download, FileSpreadsheet, Lock,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -44,23 +45,79 @@ function RadialGauge({ score }: { score: number }) {
   );
 }
 
+function downloadCSV(data: string, filename: string) {
+  const blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function ExecutiveDashboard() {
   const router = useRouter();
   const [scores, setScores] = useState<ScoreData | null>(null);
   const [emissions, setEmissions] = useState<EmissionsData | null>(null);
   const [userName, setUserName] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/session").then(r => r.json()).then(d => {
       if (!d.user) { router.push("/login"); return; }
       setUserName(d.user.name || "");
-      if (d.user.role !== "ADMIN" && d.user.role !== "SUPER_ADMIN") {
-        // non-admins can still view, just no special badge
+      const role = d.user.role;
+      if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(true);
+        fetch("/api/departments/scores").then(r => r.json()).then(d => setScores(d.data));
+        fetch("/api/emissions").then(r => r.json()).then(d => setEmissions(d));
       }
     });
-    fetch("/api/departments/scores").then(r => r.json()).then(d => setScores(d.data));
-    fetch("/api/emissions").then(r => r.json()).then(d => setEmissions(d));
   }, [router]);
+
+  function exportReport() {
+    if (!scores || !emissions) return;
+    setExporting(true);
+
+    const lines: string[] = [];
+    lines.push("EcoSphere ESG Report");
+    lines.push(`Generated,${new Date().toLocaleString()}`);
+    lines.push(`Overall ESG Score,${scores.overallEsg}`);
+    lines.push(`Total Departments,${scores.totalDepartments}`);
+    lines.push(`Overdue Compliance Issues,${scores.totalOverdueIssues}`);
+    lines.push(`Weighting,Environmental ${scores.weighting.environmental * 100}% / Social ${scores.weighting.social * 100}% / Governance ${scores.weighting.governance * 100}%`);
+    lines.push("");
+
+    lines.push("Department Leaderboard");
+    lines.push("Rank,Department,Code,Environmental,Social,Governance,Total,Overdue Compliance");
+    scores.departments.forEach((d, i) => {
+      lines.push(`${i + 1},"${d.departmentName}",${d.departmentCode},${d.environmentalScore},${d.socialScore},${d.governanceScore},${d.totalScore},${d.hasOverdueCompliance ? "YES" : "NO"}`);
+    });
+    lines.push("");
+
+    lines.push("Emissions by Source");
+    lines.push("Source,Total Emissions (kg CO2e)");
+    Object.entries(emissions.bySource).forEach(([name, value]) => {
+      lines.push(`"${name}",${Math.round(value).toLocaleString()}`);
+    });
+    lines.push("");
+
+    const allMonths = [...new Set(Object.keys(emissions.byMonth))].sort();
+    const allSources = [...new Set(Object.values(emissions.byMonth).flatMap(s => Object.keys(s)))];
+    lines.push("Monthly Emissions Trend");
+    lines.push(["Month", ...allSources].join(","));
+    allMonths.forEach(m => {
+      const monthLabel = new Date(m + "-01").toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      const sources = emissions.byMonth[m];
+      lines.push([monthLabel, ...allSources.map(s => Math.round(sources[s] || 0))].join(","));
+    });
+
+    downloadCSV(lines.join("\n"), `ecosphere-esg-report-${new Date().toISOString().slice(0, 10)}.csv`);
+    setExporting(false);
+  }
 
   const chartData = emissions
     ? Object.entries(emissions.byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([m, s]) => ({
@@ -70,6 +127,40 @@ export default function ExecutiveDashboard() {
     : [];
   const sourceNames = emissions ? Object.keys(emissions.bySource) : [];
   const pieData = emissions ? Object.entries(emissions.bySource).map(([n, v]) => ({ name: n, value: Math.round(v) })) : [];
+
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <span className="text-[var(--text-muted)]">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <Card className="max-w-md mx-4">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-red-100 dark:bg-red-500/20 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-red-500" />
+            </div>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Access Restricted</h2>
+            <p className="text-sm text-[var(--text-muted)] mb-6">
+              The Executive Dashboard is only available to Admin users. Your current role does not have access.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Link href="/gamification">
+                <Button variant="outline" className="gap-2"><ArrowLeft className="w-4 h-4" />Back to Hub</Button>
+              </Link>
+              <Link href="/profile">
+                <Button variant="ghost" className="gap-2"><User className="w-4 h-4" />My Profile</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
@@ -103,9 +194,14 @@ export default function ExecutiveDashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Executive Analytics</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5">Real-time ESG performance across all departments</p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Executive Analytics</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">Real-time ESG performance across all departments</p>
+          </div>
+          <Button onClick={exportReport} disabled={exporting || !scores} variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />{exporting ? "Exporting..." : "Export Report"}
+          </Button>
         </div>
 
         {/* Stat Cards */}
@@ -161,7 +257,7 @@ export default function ExecutiveDashboard() {
                     <defs>
                       {sourceNames.map((n, i) => (
                         <linearGradient key={n} id={`g${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.35} />
+                          <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.25} />
                           <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
                         </linearGradient>
                       ))}
