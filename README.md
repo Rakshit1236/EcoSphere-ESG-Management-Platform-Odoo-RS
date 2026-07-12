@@ -10,13 +10,14 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql)](https://postgresql.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](#)
+[![Deploy](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel)](https://ecosphere-esg-ten.vercel.app)
 
 **Track. Analyze. Comply. Gamify.**
 
 A unified platform that transforms sustainability from a compliance burden
 into an engaging, gamified organizational culture.
 
-[Get Started](#-quick-start) · [Features](#-features) · [Tech Stack](#-tech-stack) · [API](#-api-documentation) · [Screenshots](#-screenshots)
+[Live Demo](https://ecosphere-esg-ten.vercel.app) · [Features](#-features) · [Tech Stack](#-tech-stack) · [API](#-api-documentation) · [Setup](#-quick-start)
 
 </div>
 
@@ -33,7 +34,7 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 ## 🚀 Features
 
 ### 🎮 Gamification Hub
-- **Challenge System** — Browse, accept, and submit sustainability challenges with proof upload
+- **Challenge System** — Browse, accept, and submit sustainability challenges with image proof upload
 - **XP & Levels** — Earn experience points, level up, and track progress
 - **Badges** — Unlock achievement badges based on rules (challenges completed, XP earned, carbon offset)
 - **Rewards Catalog** — Spend earned points on real rewards (eco-products, half-day off, charity donations)
@@ -60,6 +61,11 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 - **Source Tracking** — Track emissions by operation type (Electricity, Travel, Waste, Water)
 - **Department Attribution** — Emissions linked to specific departments
 
+### 📸 Image Upload
+- **Proof Upload** — Drag-and-drop or click-to-upload image proof for challenge submissions
+- **Image Preview** — Live preview with remove option before submitting
+- **File Validation** — Type checking (JPG, PNG, GIF, WebP, SVG) and size limits (10MB)
+
 ---
 
 ## 🏗 Tech Stack
@@ -71,13 +77,15 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 | **Charts** | Recharts (Area, Radial, Pie) |
 | **Icons** | Lucide React |
 | **Backend** | Next.js API Routes (Serverless) |
-| **Database** | PostgreSQL 18 |
+| **Database** | PostgreSQL 18 (Neon — hosted) |
 | **ORM** | Prisma 6 |
 | **Auth** | NextAuth v5 (Credentials Provider) |
+| **Deploy** | Vercel (CI/CD from GitHub) |
 | **Language** | TypeScript (97.6%) |
 
 ---
-        
+
+
 ---
 
 ## 🗄 Database Schema
@@ -126,6 +134,11 @@ Built for the **Odoo Hackathon 2026**, EcoSphere demonstrates how enterprise ESG
 | `GET` | `/api/departments/scores` | ESG scores + overdue compliance flags |
 | `GET` | `/api/users` | User data (by ID or list all) |
 
+### File Upload
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/upload` | Upload proof image (returns `/uploads/` URL) |
+
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -169,22 +182,12 @@ totalScore = (environmentalScore × 0.4) + (socialScore × 0.3) + (governanceSco
 ```
 Also flags departments with OPEN compliance issues past their due date.
 
----
-
-## 📸 Screenshots
-
-<div align="center">
-
-### 🔐 Login
-*Clean authentication with demo quick-login*
-
-### 🎮 Gamification Hub
-*Challenge cards, XP progress bar, badge gallery, rewards catalog*
-
-### 📊 Executive Dashboard
-*ESG radial dial, emissions trend chart, department leaderboard*
-
-</div>
+### Image Upload Flow
+```
+Client selects file → POST /api/upload (FormData)
+→ Validate type + size → Save to /public/uploads/
+→ Return URL → Submit challenge with proofUrl
+```
 
 ---
 
@@ -192,7 +195,7 @@ Also flags departments with OPEN compliance issues past their due date.
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL 14+
+- PostgreSQL 14+ (local or hosted)
 - npm or yarn
 
 ### Setup
@@ -221,15 +224,31 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### Demo Credentials
 
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@ecosphere.com` | `password123` | Admin |
-| `alex@ecosphere.com` | `password123` | Employee |
-| `priya@ecosphere.com` | `password123` | Manager |
-| `marcus@ecosphere.com` | `password123` | Employee |
-| `elena@ecosphere.com` | `password123` | Employee |
+## 🌐 Deployment
+
+### Vercel (Production)
+
+The app is deployed on Vercel with Neon PostgreSQL.
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy
+vercel --prod
+```
+
+### Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host/db?sslmode=require` |
+| `AUTH_SECRET` | NextAuth secret key | Random 32+ character string |
+| `NEXTAUTH_URL` | App base URL | `[https://your-app.vercel.app](https://ecosphere-esg-ten.vercel.app/login)` |
 
 ---
 
@@ -241,7 +260,9 @@ Open [http://localhost:3000](http://localhost:3000)
 - **Auto-calculations** — Emission factors auto-compute CO₂e; badge rules auto-evaluate on XP gain
 - **Dual-theme** — Light/dark mode with CSS custom properties and localStorage persistence
 - **Responsive** — Mobile-first design, works on all screen sizes
+- **Image upload** — Direct file upload with preview for challenge proof submissions
 - **Production-ready** — Clean build, no TypeScript errors, proper error handling
+- **Cloud deployed** — Vercel + Neon with CI/CD from GitHub
 
 ---
 
